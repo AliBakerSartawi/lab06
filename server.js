@@ -29,6 +29,7 @@ const GEO_CODE_API_KEY = process.env.GEO_CODE_API_KEY;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const PARKS_API_KEY = process.env.PARKS_API_KEY;
 const MOVIE_API_KEY = process.env.MOVIE_API_KEY;
+const YELP_API_KEY = process.env.YELP_API_KEY;
 const app = express();
 app.use(cors());
 
@@ -46,6 +47,7 @@ app.get('/location', handleLocationRequest);
 app.get('/weather', handleWeatherRequest);
 app.get('/parks', handleParksRequest);
 app.get('/movies', handleMoviesRequest);
+app.get('/yelp', handleYelpRequest);
 app.use('*', handleErrorNotFound);
 
 // Handle Functions
@@ -185,6 +187,11 @@ function handleMoviesRequest (req, res) {
     console.log('error', error);
     res.status(500).send('OOOPS!');
   });
+}
+
+function handleYelpRequest (req, res) {
+  const searchQuery = req.query.search_query;
+  const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${searchQuery}`;
 }
 
 
