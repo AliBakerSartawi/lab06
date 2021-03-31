@@ -28,6 +28,7 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const GEO_CODE_API_KEY = process.env.GEO_CODE_API_KEY;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const PARKS_API_KEY = process.env.PARKS_API_KEY;
+const MOVIE_API_KEY = process.env.MOVIE_API_KEY;
 const app = express();
 app.use(cors());
 
@@ -35,15 +36,16 @@ app.use(cors());
 // const client = new pg.Client(DATABASE_URL);
 const client = new pg.Client({
   connectionString: DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  // ssl: {
+  //   rejectUnauthorized: false
+  // }
 });
 
 // Endpoints
 app.get('/location', handleLocationRequest);
 app.get('/weather', handleWeatherRequest);
 app.get('/parks', handleParksRequest);
+app.get('/movies', handleMoviesRequest);
 app.use('*', handleErrorNotFound);
 
 // Handle Functions
@@ -165,6 +167,26 @@ function handleParksRequest(req, res) {
   });
 }
 
+function handleMoviesRequest (req, res) {
+  const searchQuery = req.query.search_query;
+  // const url = `https://api.themoviedb.org/3/discover/movie?api_key=${MOVIE_API_KEY}&sort_by=vote_count.desc&page=1&query=${searchQuery}&include_adult=false`;
+  const url = `https://api.themoviedb.org/3/search/movie?api_key=${MOVIE_API_KEY}&query=${searchQuery}&page=1&sort_by=popularity.desc&include_adult=false`;
+
+  if (!searchQuery) { //for empty request
+    res.status(404).send('no search query was provided');
+  }
+
+  superagent.get(url).then(resData => {
+    const moviesData = resData.body.results.map(movie => {
+      return new Movie(movie);
+    });
+    res.status(200).send(moviesData);
+  }).catch(error => {
+    console.log('error', error);
+    res.status(500).send('OOOPS!');
+  });
+}
+
 
 
 // Constructors
@@ -186,6 +208,16 @@ function Park(data) {
   this.fee = data.entranceFees[0].cost || '0.00';
   this.description = data.description;
   this.url = data.url;
+}
+
+function Movie(data) {
+  this.title = data.title;
+  this.overview = data.overview;
+  this.average_votes = data.vote_average;
+  this.total_votes = data.vote_count;
+  this.image_url = `https://image.tmdb.org/t/p/w500/${data.poster_path}`;
+  this.popularity = data.popularity;
+  this.released_on = data.release_date;
 }
 
 //////
