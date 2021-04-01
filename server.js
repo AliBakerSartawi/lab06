@@ -173,7 +173,7 @@ function handleParksRequest(req, res) {
     res.status(200).send(parksData);
   }).catch((error) => {
     console.log('error', error);
-    res.status(500).send('something went wrong');
+    res.status(500).send('No parks in the vicinity!');
   });
 }
 
@@ -197,19 +197,19 @@ function handleMoviesRequest (req, res) {
   });
 }
 
+//// two global variables only for yelp
 let yelpPreviousQuery = '';
-let offset = -5;
+let yelpOffset = -5;
 function handleYelpRequest (req, res) {
   const searchQuery = req.query.search_query;
   if (searchQuery !== yelpPreviousQuery) {
     yelpPreviousQuery = searchQuery;
-    offset = 0;
+    yelpOffset = 0;
   } else {
-    offset += 5;
+    yelpOffset += 5;
   }
 
-
-  const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${searchQuery}&limit=5&offset=${offset}`;
+  const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${searchQuery}&limit=5&offset=${yelpOffset}`;
 
   if (!searchQuery) { //for empty request
     res.status(404).send('no search query was provided');
@@ -222,7 +222,7 @@ function handleYelpRequest (req, res) {
     res.status(200).send(yelpData);
   }).catch(e => {
     console.log('error', e);
-    res.status(500).send('WOOPSIE!!!!');
+    res.status(500).send('WOOPSIE, no restaurants listed in this area!!!!');
   });
 }
 
