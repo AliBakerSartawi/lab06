@@ -191,7 +191,18 @@ function handleMoviesRequest (req, res) {
 
 function handleYelpRequest (req, res) {
   const searchQuery = req.query.search_query;
-  const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${searchQuery}`;
+  const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${searchQuery}&limit=5&offset=5`;
+
+  if (!searchQuery) { //for empty request
+    res.status(404).send('no search query was provided');
+  }
+
+  superagent.get(url).set(`Authorization`, `Bearer ${YELP_API_KEY}`).then(resData => {
+    res.status(200).send(resData.body);
+  }).catch(e => {
+    console.log('error', e);
+    res.status(500).send('WOOPSIE!!!!');
+  });
 }
 
 
