@@ -24,6 +24,7 @@ const cors = require('cors');
 // Setup
 const PORT = process.env.PORT || 3001;
 // if the APIs are not working, delete any whitespaces in the .env file
+const ENV = process.env.ENV || 'DEP';
 const DATABASE_URL = process.env.DATABASE_URL;
 const GEO_CODE_API_KEY = process.env.GEO_CODE_API_KEY;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
@@ -35,12 +36,19 @@ app.use(cors());
 
 ///// database connection setup
 // const client = new pg.Client(DATABASE_URL);
-const client = new pg.Client({
-  connectionString: DATABASE_URL,
-  // ssl: {
-  //   rejectUnauthorized: false
-  // }
-});
+let client = '';
+if (ENV === 'DEP') {
+  client = new pg.Client({
+    connectionString: DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+} else {
+  client = new pg.Client({
+    connectionString: DATABASE_URL,
+  });
+}
 
 // Endpoints
 app.get('/location', handleLocationRequest);
