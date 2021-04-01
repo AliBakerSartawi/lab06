@@ -24,6 +24,7 @@ const cors = require('cors');
 // Setup
 const PORT = process.env.PORT || 3001;
 // if the APIs are not working, delete any whitespaces in the .env file
+const ENV = process.env.ENV || 'DEP';
 const DATABASE_URL = process.env.DATABASE_URL;
 const GEO_CODE_API_KEY = process.env.GEO_CODE_API_KEY;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
@@ -35,12 +36,19 @@ app.use(cors());
 
 ///// database connection setup
 // const client = new pg.Client(DATABASE_URL);
-const client = new pg.Client({
-  connectionString: DATABASE_URL,
-  // ssl: {
-  //   rejectUnauthorized: false
-  // }
-});
+let client = '';
+if (ENV === 'DEP') {
+  client = new pg.Client({
+    connectionString: DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+} else {
+  client = new pg.Client({
+    connectionString: DATABASE_URL,
+  });
+}
 
 // Endpoints
 app.get('/location', handleLocationRequest);
@@ -189,16 +197,29 @@ function handleMoviesRequest (req, res) {
   });
 }
 
+let yelpPreviousQuery = '';
+let offset = -5;
 function handleYelpRequest (req, res) {
   const searchQuery = req.query.search_query;
-  const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${searchQuery}&limit=5&offset=5`;
+  if (searchQuery !== yelpPreviousQuery) {
+    yelpPreviousQuery = searchQuery;
+    offset = 0;
+  } else {
+    offset += 5;
+  }
+
+
+  const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${searchQuery}&limit=5&offset=${offset}`;
 
   if (!searchQuery) { //for empty request
     res.status(404).send('no search query was provided');
   }
 
   superagent.get(url).set(`Authorization`, `Bearer ${YELP_API_KEY}`).then(resData => {
-    res.status(200).send(resData.body);
+    const yelpData = resData.body.businesses.map(business => {
+      return new Yelp(business);
+    });
+    res.status(200).send(yelpData);
   }).catch(e => {
     console.log('error', e);
     res.status(500).send('WOOPSIE!!!!');
@@ -236,6 +257,14 @@ function Movie(data) {
   this.image_url = `https://image.tmdb.org/t/p/w500/${data.poster_path}`;
   this.popularity = data.popularity;
   this.released_on = data.release_date;
+}
+
+function Yelp(data) {
+  this.name = data.name;
+  this.image_url = data.image_url;
+  this.price = data.price;
+  this.rating = data.rating;
+  this.url = data.url;
 }
 
 //////
