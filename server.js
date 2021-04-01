@@ -8,19 +8,6 @@ const pg = require('pg');
 const superagent = require('superagent');
 const cors = require('cors');
 
-///
-// install pg package
-// setup url for database connections in .env
-// connect the server with postgresql
-//create endpoint that will take the users info and create a new user in the DB
-//create an endpoint for retrieving all the user info
-
-
-// Global Variables
-// let searchQuery = '';
-// let latitude = '';
-// let longitude = '';
-
 // Setup
 const PORT = process.env.PORT || 3001;
 // if the APIs are not working, delete any whitespaces in the .env file
