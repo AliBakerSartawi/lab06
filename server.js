@@ -197,17 +197,9 @@ function handleMoviesRequest (req, res) {
   });
 }
 
-//// two global variables only for yelp
-let yelpPreviousQuery = '';
-let yelpOffset = -5;
 function handleYelpRequest (req, res) {
   const searchQuery = req.query.search_query;
-  if (searchQuery !== yelpPreviousQuery) {
-    yelpPreviousQuery = searchQuery;
-    yelpOffset = 0;
-  } else {
-    yelpOffset += 5;
-  }
+  const yelpOffset = req.query.page * 5 - 5;
 
   const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${searchQuery}&limit=5&offset=${yelpOffset}`;
 
