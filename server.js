@@ -197,16 +197,29 @@ function handleMoviesRequest (req, res) {
   });
 }
 
+let yelpPreviousQuery = '';
+let offset = -5;
 function handleYelpRequest (req, res) {
   const searchQuery = req.query.search_query;
-  const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${searchQuery}&limit=5&offset=5`;
+  if (searchQuery !== yelpPreviousQuery) {
+    yelpPreviousQuery = searchQuery;
+    offset = 0;
+  } else {
+    offset += 5;
+  }
+
+
+  const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${searchQuery}&limit=5&offset=${offset}`;
 
   if (!searchQuery) { //for empty request
     res.status(404).send('no search query was provided');
   }
 
   superagent.get(url).set(`Authorization`, `Bearer ${YELP_API_KEY}`).then(resData => {
-    res.status(200).send(resData.body);
+    const yelpData = resData.body.businesses.map(business => {
+      return new Yelp(business);
+    });
+    res.status(200).send(yelpData);
   }).catch(e => {
     console.log('error', e);
     res.status(500).send('WOOPSIE!!!!');
@@ -244,6 +257,14 @@ function Movie(data) {
   this.image_url = `https://image.tmdb.org/t/p/w500/${data.poster_path}`;
   this.popularity = data.popularity;
   this.released_on = data.release_date;
+}
+
+function Yelp(data) {
+  this.name = data.name;
+  this.image_url = data.image_url;
+  this.price = data.price;
+  this.rating = data.rating;
+  this.url = data.url;
 }
 
 //////
